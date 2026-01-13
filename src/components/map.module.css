@@ -1,0 +1,62 @@
+.mapWrap {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.map {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1; 
+}
+
+/* Barre des filières (Agriculture, Pêche...) en haut */
+.filiereBar {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.filiereBtn {
+  padding: 4px ;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+/* Panneau administratif flottant à gauche */
+.adminPanel {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  z-index: 1000;
+  width: 250px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* Bouton pour ouvrir/fermer le panneau admin */
+.toggleAdminBtn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
