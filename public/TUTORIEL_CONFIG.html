@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration AgroMap Cameroon</title>
+    <style>
+        :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f8fafc; --accent: #d32f2f; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; color: #1e293b; background: var(--bg); margin: 0; padding: 0; }
+        .header { background: var(--primary); color: white; padding: 2rem; text-align: center; border-bottom: 4px solid #ffd600; }
+        .container { max-width: 900px; margin: 2rem auto; background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 2rem; display: flex; align-items: center; gap: 10px; }
+        .step-tag { background: var(--primary); color: white; padding: 2px 10px; border-radius: 4px; font-size: 0.9rem; }
+        pre { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; font-family: 'Consolas', monospace; }
+        .check-list { list-style: none; padding: 0; }
+        .check-list li::before { content: "✅ "; }
+        .important { background: #fff3e0; border-left: 5px solid #ff9800; padding: 1rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+        .code-inline { background: #e2e8f0; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+        .test-zone { background: #f1f8e9; border: 2px solid var(--primary); padding: 1.5rem; border-radius: 12px; margin-top: 3rem; text-align: center; }
+        .btn-test { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🌍 Guide de Configuration Technique</h1>
+    <p>AgroMap Cameroon - Synchronisation de l'équipe</p>
+</div>
+
+<div class="container">
+    <p>Ce tutoriel détaille la mise en place de la base de données <strong>PostGIS</strong> et du serveur <strong>GeoServer</strong> pour que l'application fonctionne immédiatement.</p>
+
+    <!-- ETAPE 1 -->
+    <h2><span class="step-tag">Étape 1</span> PostGIS & pgAdmin 4</h2>
+    <p>Nous allons préparer le stockage spatial des données de production.</p>
+    <ol>
+        <li>Lancez <strong>pgAdmin 4</strong> et connectez-vous.</li>
+        <li>Faites un clic-droit sur <em>Databases</em> > <strong>Create</strong> > <strong>Database...</strong></li>
+        <li>Nommez la base de données : <span class="code-inline">cmr_prods</span>.</li>
+        <li>Une fois créée, faites un clic-droit sur <span class="code-inline">cmr_prods</span> > <strong>Query Tool</strong>.</li>
+        <li>Tapez et exécutez la commande suivante pour activer les fonctions cartographiques :
+            <pre>CREATE EXTENSION postgis;</pre>
+        </li>
+        <li><strong>Importation :</strong> Utilisez le <em>PostGIS Shapefile Import/Export Manager</em> ou QGIS pour importer la couche fournie dans le schéma <code>public</code>.
+            <br><strong>Nom de la table :</strong> <span class="code-inline">cmr_admin3</span></li>
+    </ol>
+    <div class="important">
+        💡 <strong>Vérification :</strong> Dans l'arborescence à gauche, allez dans <em>Schemas > public > Tables</em>. Vous devez voir <code>cmr_admin3</code>. Si vous ouvrez les colonnes, vous devez y trouver <code>adm3_name1</code>, <code>filiere</code>, <code>tonnage</code>, etc.
+    </div>
+
+    <!-- ETAPE 2 -->
+    <h2><span class="step-tag">Étape 2</span> Configuration de GeoServer</h2>
+    <p>GeoServer va transformer vos données SQL en flux Web utilisable par la carte.</p>
+    
+    <h3>1. Créer l'Espace de travail (Workspace)</h3>
+    <ul>
+        <li>Allez dans <strong>Espaces de travail</strong> > <em>Ajouter un nouveau</em>.</li>
+        <li>Nom : <span class="code-inline">cameroun</span></li>
+        <li>Namespace URI : <code>http://cameroun</code></li>
+        <li>Cochez "Espace de travail par défaut" et Sauvegardez.</li>
+    </ul>
+
+    <h3>2. Créer l'Entrepôt (Store)</h3>
+    <ul>
+        <li>Allez dans <strong>Entrepôts</strong> > <em>Ajouter un nouvel entrepôt</em> > <strong>PostGIS</strong>.</li>
+        <li>Espace de travail : <code>cameroun</code></li>
+        <li>Nom de la source : <code>cmr_data</code></li>
+        <li>Paramètres de connexion :
+            <ul>
+                <li>Database : <span class="code-inline">cmr_prods</span></li>
+                <li>User : <code>postgres</code> (ou le vôtre)</li>
+                <li>Password : <code>votre_mot_de_passe</code></li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>3. Publier la Couche (Layer)</h3>
+    <ul>
+        <li>Allez dans <strong>Couches</strong> > <em>Ajouter une nouvelle ressource</em> > Choisissez <code>cameroun:cmr_data</code>.</li>
+        <li>Cliquez sur <strong>Publier</strong> à côté de <code>cmr_admin3</code>.</li>
+        <li>Dans l'onglet <strong>Données</strong> :
+            <ul>
+                <li>SRS Natif : <code>EPSG:4326</code></li>
+                <li>Emprises : Cliquez sur "Calculer à partir des données" ET "Calculer à partir de l'emprise native".</li>
+            </ul>
+        </li>
+        <li>Sauvegardez.</li>
+    </ul>
+
+    <!-- ETAPE 3 -->
+    <h2><span class="step-tag">Étape 3</span> Configuration de l'App (Frontend)</h2>
+    <p>L'application est prête, il suffit de lui donner les accès.</p>
+    <ol>
+        <li>Ouvrez le dossier du projet avec VS Code.</li>
+        <li>Vérifiez le fichier <span class="code-inline">.env.local</span> à la racine :</li>
+    </ol>
+    <pre>
+NEXT_PUBLIC_MAPTILER_KEY=VOTRE_CLE_ICI
+NEXT_PUBLIC_GEOSERVER_WFS_URL="/geoserver-api/ows"
+NEXT_PUBLIC_GEOSERVER_WFS_LAYER="cameroun:cmr_admin3"</pre>
+
+    <div class="important">
+        <strong>🛡️ Note sur le CORS :</strong> Pas besoin de toucher au XML de GeoServer. L'application utilise un proxy interne qui redirige <code>/geoserver-api</code> vers <code>localhost:8080/geoserver</code>.
+    </div>
+
+    <!-- TEST ZONE -->
+    <div class="test-zone">
+        <h3>🚀 Testeur de Flux Direct</h3>
+        <p>Si GeoServer est lancé, cliquez sur ce bouton pour vérifier la disponibilité de la couche :</p>
+        <button class="btn-test" id="testBtn">Vérifier cameroun:cmr_admin3</button>
+        <p id="testStatus" style="font-weight: bold; margin-top: 15px;"></p>
+    </div>
+
+    <footer style="margin-top: 4rem; text-align: center; color: #94a3b8; font-size: 0.8rem;">
+        AgroMap Cameroon v1.0 - Guide de maintenance équipe
+    </footer>
+</div>
+
+<script>
+    document.getElementById('testBtn').addEventListener('click', async () => {
+        const status = document.getElementById('testStatus');
+        status.innerText = "⏳ Test de la liaison interne...";
+        status.style.color = "#333";
+
+        // Comme le fichier est dans le dossier public, il utilise le même hôte (localhost:3000)
+        // On appelle le proxy directement
+        const url = "/geoserver-api/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cameroun:cmr_admin3&outputFormat=application/json&maxFeatures=1";
+
+        try {
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                status.style.color = "#2e7d32";
+                status.innerText = "✅ RÉUSSI : GeoServer diffuse la couche. Donnée test : " + data.features[0].properties.adm3_name1;
+            } else {
+                status.style.color = "#c62828";
+                status.innerText = "❌ ERREUR : La couche 'cameroun:cmr_admin3' est introuvable sur GeoServer.";
+            }
+        } catch (err) {
+            status.style.color = "#c62828";
+            status.innerText = "❌ ÉCHEC : GeoServer ne répond pas (vérifiez le port 8080 et le CORS de votre navigateur pour ce test).";
+        }
+    });
+</script>
+
+</body>
+</html>
